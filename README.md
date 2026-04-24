@@ -1,93 +1,186 @@
-# SDN Path Tracing Tool
-
-A complete SDN-based Path Tracing Tool using Mininet and Ryu Controller on Fedora Linux.
-
----
+# SDN Path Tracing Tool (Ryu + Mininet)
 
 ## Project Overview
 
-This project demonstrates:
-- **SDN Controller-Switch Interaction** using OpenFlow 1.3
-- **Path Tracing** - tracking packets across multiple switches
-- **Flow Rule Installation** using OFPFlowMod
-- **Mininet Emulation** with linear topology
+This project implements a Software Defined Networking (SDN) application using the Ryu controller and Mininet to demonstrate:
+
+* Controller–switch interaction using OpenFlow 1.3
+* Handling of Packet-In events
+* Flow rule installation using OFPFlowMod
+* Path tracing of packets across multiple switches
+* Network behavior under normal and failure conditions
 
 ---
 
-## Files Included
+## Components Used
 
-| File | Description |
-|------|-------------|
-| `path_tracer.py` | Ryu controller code |
-| `SETUP.md` | Fedora installation guide |
-| `MININET.md` | Topology instructions |
-| `FLOW_RULES.md` | Flow rule implementation details |
-| `EXECUTION.md` | Step-by-step execution guide |
-| `TESTING.md` | Testing & validation guide |
-| `README.md` | This file |
+* Mininet – Network emulator (hosts, switches, links)
+* Ryu – SDN controller (control plane)
+* OpenFlow – Protocol for communication between controller and switches
+* Python 3.11 – Required for Ryu compatibility
 
 ---
 
-## Quick Start
+## Topology
 
-### 1. Install Dependencies (Fedora)
+Linear topology with three switches:
 
-```bash
-# Install packages
-sudo dnf update -y
-sudo dnf install -y python3 python3-pip git gcc make openvswitch
-sudo pip3 install ryu
+```
+h1 (10.0.0.1) --- s1 --- s2 --- s3 --- h2 (10.0.0.2)
+```
 
-# Clone and install Mininet
+* s1, s2, s3 represent OpenFlow-enabled switches
+* h1 and h2 represent end hosts
+
+---
+
+## Setup Instructions (Fedora)
+
+### 1. Install Python 3.11
+
+```
+sudo dnf install -y python3.11
+```
+
+### 2. Install Ryu and dependencies
+
+```
+python3.11 -m ensurepip --upgrade
+python3.11 -m pip install --upgrade pip setuptools wheel
+python3.11 -m pip install --user ryu netaddr eventlet msgpack oslo.config ovs routes six tinyrpc webob "packaging<21"
+```
+
+### 3. Install Mininet
+
+```
 cd ~
 git clone https://github.com/mininet/mininet.git
 cd mininet
-sudo ./util/install.sh -a
+sudo ./util/install.sh -fnpv
 ```
 
-### 2. Run Controller
+---
 
-```bash
-# Terminal 1
-ryu-manager path_tracer.py
+## Execution Steps
+
+### Step 1: Start Controller (Terminal 1)
+
+```
+cd ~/Documents/SEM_4_STUFF/CN/sdn
+python3.11 -m ryu.cmd.manager path_tracer.py
 ```
 
-### 3. Run Mininet
+### Step 2: Start Mininet (Terminal 2)
 
-```bash
-# Terminal 2
-sudo mn --topo linear,3 --controller remote --mac
+```
+sudo mn -c
+sudo mn --topo linear,3 --controller remote
 ```
 
-### 4. Test
+### Step 3: Generate Traffic
 
-```bash
-mininet> pingall
-mininet> h1 ping h2
-mininet> dpctl dump-flows
+Inside Mininet:
+
+```
+h1 ping -c 5 h2
 ```
 
 ---
 
 ## Expected Output
 
-When h1 pings h4 (through 3 switches):
+### Mininet
 
 ```
-[INFO] Packet: 10.0.0.1 -> 10.0.0.4 | Switch: s1
-[INFO] Path from 10.0.0.1 to 10.0.0.4: s1 -> s2 -> s3
+0% packet loss
+```
+
+### Controller (Ryu)
+
+```
+Path 10.0.0.1 -> 10.0.0.2: s1 -> s2 -> s3
 ```
 
 ---
 
-## Topology
+## Working Principle
+
+1. A host sends a packet to the network
+2. The switch, lacking a matching flow entry, sends a Packet-In message to the controller
+3. The controller processes the packet and learns MAC address mappings
+4. The controller installs a flow rule using Flow-Mod
+5. The packet is forwarded through the switches
+6. The path taken by the packet is recorded and displayed
+
+---
+
+## Testing and Validation
+
+### Scenario 1: Normal Communication
+
+* Command: `h1 ping h2`
+* Result: Successful communication
+* Output: Path traced as s1 -> s2 -> s3
+
+---
+
+### Scenario 2: Link Failure
+
+Inside Mininet:
 
 ```
-h1(10.0.0.1) --- s1 --- s2 --- s3 --- h2(10.0.0.2)
-                     |        |
-                    h3(10.0.0.3)  h4(10.0.0.4)
+link s1 s2 down
 ```
 
-## License
+Then:
 
-Educational project for Computer Networks (CN) course.
+```
+h1 ping h2
+```
+
+Result:
+
+```
+Destination Host Unreachable
+```
+
+Explanation:
+The linear topology does not provide an alternative path, resulting in communication failure.
+
+---
+
+## Key Concepts Demonstrated
+
+* Separation of control plane and data plane
+* Centralized network control using an SDN controller
+* OpenFlow-based communication
+* Flow table rule installation
+* Dynamic MAC address learning
+* Packet path tracking across switches
+
+---
+
+## Observations
+
+* Initial packets are flooded before flow rules are installed
+* Subsequent packets follow established flow rules
+* Path output may include repeated switches due to continuous packet processing
+
+---
+
+## Conclusion
+
+This project demonstrates the core principles of Software Defined Networking, including centralized control, dynamic flow rule management, and visibility into packet paths. It also highlights the impact of topology constraints on network reliability.
+
+---
+
+## Files Included
+
+* `path_tracer.py` – Ryu controller implementation
+* `README.md` – Project documentation
+
+---
+
+## Author
+
+SDN Project – Computer Networks Course
