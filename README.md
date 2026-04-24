@@ -88,25 +88,6 @@ h1(10.0.0.1) --- s1 --- s2 --- s3 --- h2(10.0.0.2)
                     h3(10.0.0.3)  h4(10.0.0.4)
 ```
 
----
-
-## Requirements Met
-
-- ✅ OpenFlow 1.3 support
-- ✅ packet_in event handling
-- ✅ Source/Destination IP extraction
-- ✅ Switch datapath ID tracking
-- ✅ Path dictionary storage
-- ✅ No duplicate switches
-- ✅ Path output format: "Path from X to Y: s1 -> s2 -> s3"
-- ✅ OFPFlowMod for flow rules
-- ✅ Default FLOOD forwarding
-- ✅ Single Python file
-- ✅ Clean, well-commented code
-- ✅ Beginner-friendly
-
----
-
 ## License
 
 Educational project for Computer Networks (CN) course.
